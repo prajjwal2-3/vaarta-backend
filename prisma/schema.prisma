@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id
+  email            String    @unique
+  name             String    @unique
+  profileImage     String?
+  emailVerified    DateTime?
+  password         String?
+  role             String    @default("user")
+  friendIds        String[]
+  requestSent      String[]
+  requestReceived  String[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  Account          Account[]
+  messagesReceived Message[] @relation("MessagesReceived")
+  messagesSent     Message[] @relation("MessagesSent")
+}
+
+model Message {
+  id         String   @id
+  senderId   String
+  receiverId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  content    String
+  sent       Boolean  @default(false)
+  delivered  Boolean  @default(false)
+  read       Boolean  @default(false)
+  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
+  sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}

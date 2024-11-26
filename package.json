@@ -1,0 +1,16 @@
+{
+  "name": "message",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "5.12.1",
+    "express": "^4.21.1",
+    "prisma": "^5.22.0"
+  }
+}
