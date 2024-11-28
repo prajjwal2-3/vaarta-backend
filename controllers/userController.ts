@@ -15,24 +15,28 @@ export function setUsersOnlineAndBroadcast( user: any, ws: ServerWebSocket) {
     })
 }
 
-export function sendTypingEvent(userId: string, ws: ServerWebSocket) {
+export function sendTypingEvent(userIds: string[], ws: ServerWebSocket) {
     const onlineUsers = Array.from(usersOnline.entries());
-    const userToSend = onlineUsers.find(([id]) => id === userId);
 
-    if (!userToSend) {
-        console.warn(`User with ID ${userId} is not online.`);
-        return;
-    }
+    userIds.forEach((userId) => {
+        const userToSend = onlineUsers.find(([id]) => id === userId);
 
-    const [, targetWs] = userToSend; 
-    if (targetWs.readyState === WebSocket.OPEN) {
-        const message = JSON.stringify({
-            type: 'typingEvent',
-            userId,
-        });
-        targetWs.send(message);
-        console.log(`Typing event sent to user: ${userId}`);
-    } else {
-        console.warn(`WebSocket for user ${userId} is not open.`);
-    }
+        if (!userToSend) {
+            console.warn(`User with ID ${userId} is not online.`);
+            return;
+        }
+
+        const [, targetWs] = userToSend;
+        if (targetWs.readyState === WebSocket.OPEN) {
+            const message = JSON.stringify({
+                type: 'typingEvent',
+                userId,
+            });
+            targetWs.send(message);
+            console.log(`Typing event sent to user: ${userId}`);
+        } else {
+            console.warn(`WebSocket for user ${userId} is not open.`);
+        }
+    });
 }
+

@@ -26,14 +26,14 @@ const server = Bun.serve({
     async message(ws: ServerWebSocket, message: string) {
       const parsedMessage = JSON.parse(message)
       console.log(`message received ${message}`)
-      switch (parsedMessage.type){
+      switch (parsedMessage.type) {
         case 'setMeOnline':
-          setUsersOnlineAndBroadcast(parsedMessage.user,ws)
+          setUsersOnlineAndBroadcast(parsedMessage.user, ws)
           break
         case 'iAmTyping':
-  sendTypingEvent(parsedMessage.userId,ws)
-  break
-          
+          sendTypingEvent(parsedMessage.userIds, ws)
+          break
+        
       }
       usersOnline.set(parsedMessage.user.id, ws)
     }

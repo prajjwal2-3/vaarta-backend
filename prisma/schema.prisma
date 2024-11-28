@@ -11,7 +11,6 @@ model User {
   id               String    @id
   email            String    @unique
   name             String    @unique
-  profileImage     String?
   emailVerified    DateTime?
   password         String?
   role             String    @default("user")
@@ -20,9 +19,25 @@ model User {
   requestReceived  String[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  image            String?
   Account          Account[]
   messagesReceived Message[] @relation("MessagesReceived")
   messagesSent     Message[] @relation("MessagesSent")
+}
+
+model Room {
+  id            String    @id
+  createdBy     String
+  roomType      roomTypes
+  users         String[]
+  lastMessageId String? 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum roomTypes {
+  SINGLE
+  GROUP
 }
 
 model Message {
