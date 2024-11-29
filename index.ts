@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from "bun";
-import { sendTypingEvent, setUsersOnlineAndBroadcast } from "./controllers/userController";
+import { sendTypingEvent, setUsersOnlineAndBroadcast ,createRoom,sendMessage} from "./controllers/userController";
 export const usersOnline = new Map<string, ServerWebSocket>()
 const server = Bun.serve({
   port: Bun.env.port,
@@ -18,7 +18,6 @@ const server = Bun.serve({
   websocket: {
     open(ws: ServerWebSocket<unknown>) {
       console.log('connection open')
-      ws.send('connection open')
     },
     close() {
       console.log('connection closed')
@@ -28,14 +27,18 @@ const server = Bun.serve({
       console.log(`message received ${message}`)
       switch (parsedMessage.type) {
         case 'setMeOnline':
-          setUsersOnlineAndBroadcast(parsedMessage.user, ws)
+          setUsersOnlineAndBroadcast(parsedMessage.userId, ws)
           break
         case 'iAmTyping':
           sendTypingEvent(parsedMessage.userIds, ws)
           break
-        
+        case 'createRoom':
+          createRoom(parsedMessage.createdBy,parsedMessage.users,parsedMessage.name,parsedMessage.roomType)
+          break
+        case 'sendMessage':
+          sendMessage(parsedMessage.senderId,parsedMessage.roomId,parsedMessage.content)
+          break
       }
-      usersOnline.set(parsedMessage.user.id, ws)
     }
   },
 });

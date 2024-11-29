@@ -8,50 +8,47 @@ datasource db {
 }
 
 model User {
-  id               String    @id
-  email            String    @unique
-  name             String    @unique
-  emailVerified    DateTime?
-  password         String?
-  role             String    @default("user")
-  friendIds        String[]
-  requestSent      String[]
-  requestReceived  String[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  image            String?
-  Account          Account[]
-  messagesReceived Message[] @relation("MessagesReceived")
-  messagesSent     Message[] @relation("MessagesSent")
+  id              String    @id
+  email           String    @unique
+  name            String    @unique
+  emailVerified   DateTime?
+  password        String?
+  role            String    @default("user")
+  friendIds       String[]
+  requestSent     String[]
+  requestReceived String[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  image           String?
+  Account         Account[]
+  messagesSent    Message[] @relation("MessagesSent")
 }
 
 model Room {
-  id            String    @id
+  id            String    @id @default(uuid())
   createdBy     String
   roomType      roomTypes
   users         String[]
-  lastMessageId String? 
+  lastMessageId String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-}
-
-enum roomTypes {
-  SINGLE
-  GROUP
+  name          String
+  roomImage     String?
+  messages      Message[]
 }
 
 model Message {
-  id         String   @id
-  senderId   String
-  receiverId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  content    String
-  sent       Boolean  @default(false)
-  delivered  Boolean  @default(false)
-  read       Boolean  @default(false)
-  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
-  sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
+  id        String   @id @default(uuid())
+  senderId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  content   String
+  sent      Boolean  @default(false)
+  delivered Boolean  @default(false)
+  read      Boolean  @default(false)
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  sender    User     @relation("MessagesSent", fields: [senderId], references: [id])
 }
 
 model Account {
@@ -71,4 +68,9 @@ model Account {
   User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
+}
+
+enum roomTypes {
+  SINGLE
+  GROUP
 }
