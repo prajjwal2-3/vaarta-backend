@@ -44,64 +44,93 @@ export function sendTypingEvent(userIds: string[], ws: ServerWebSocket) {
     });
 }
 
-export async function createRoom(createdBy: string, users: string[], name: string, roomType: RoomType) {
+export async function createRoom(
+    createdBy: string,
+    users: string[],
+    name: string,
+    roomType: RoomType
+  ) {
     const onlineUsers = Array.from(usersOnline.entries());
+  
     try {
-        const newRoom = await prisma.room.create({
-            data: {
-                name,
-                createdBy,
-                users,
-                roomType
-            }
-        })
-        const userIdsInRoom = users
-        userIdsInRoom.forEach((userId) => {
-            const userToSend = onlineUsers.find(([id]) => id === userId);
-            if (!userToSend) {
-                console.warn(`User with ID ${userId} is not online.`);
-                return;
-            }
-            const [, targetWs] = userToSend;
-            if (targetWs.readyState === WebSocket.OPEN) {
-                const message = JSON.stringify({
-                    type: 'newRoom',
-                    newRoom,
-                });
-                targetWs.send(message);
-                console.log(`New room created and info sent: ${userId}`);
-            } else {
-                console.warn(`WebSocket for user ${userId} is not open.`);
-            }
-        })
-      
-        if (roomType==='SINGLE') {
-            const friendId = users.filter((user) => user !== createdBy)
-            const friend = await prisma.user.findUnique({
-                where: {
-                    id: friendId[0]
-                }, select: {
-                    image: true
-                }
-            })
-            const newestRoom = await prisma.room.update({
-                where: {
-                    id: newRoom.id
-                }, data:
-                {
-                    roomImage: friend?.image
-                }
-            })
+      let newRoom;
+  
+      if (roomType === 'SINGLE') {
+        const friendId = users.find((user) => user !== createdBy);
+        const friend = await prisma.user.findUnique({
+          where: {
+            id: friendId,
+          },
+          select: {
+            image: true,
+            name: true,
+          },
+        });
+  
+        if (!friend) {
+          throw new Error(`Friend with ID ${friendId} not found.`);
         }
-
+  
+        newRoom = await prisma.room.create({
+          data: {
+            name: friend.name,
+            createdBy,
+            users,
+            roomType,
+            roomImage: friend.image , 
+          },
+        });
+      } else {
+        newRoom = await prisma.room.create({
+          data: {
+            name,
+            createdBy,
+            users,
+            roomType,
+          },
+        });
+      }
+      const userIdsInRoom = users;
+      userIdsInRoom.forEach((userId) => {
+        const userToSend = onlineUsers.find(([id]) => id === userId);
+        if (!userToSend) {
+          console.warn(`User with ID ${userId} is not online.`);
+          return;
+        }
+        const [, targetWs] = userToSend;
+        if (targetWs.readyState === WebSocket.OPEN) {
+          const message = JSON.stringify({
+            type: 'newRoom',
+            newRoom,
+          });
+          targetWs.send(message);
+          console.log(`New room created and info sent to user: ${userId}`);
+        } else {
+          console.warn(`WebSocket for user ${userId} is not open.`);
+        }
+      });
     } catch (err) {
-        console.log('error creating a new room')
+      console.error('Error creating a new room:', err);
     }
-}
+  }
+  
 
 export async function sendMessage(senderId: string, roomId: string, content: string) {
     const onlineUsers = Array.from(usersOnline.entries());
+    
     try {
+      const room = await prisma.room.findUnique({
+        where: {
+            id: roomId
+        },
+        select: {
+            users: true
+        }
+    });
+    if (!room) {
+      console.warn(`Room with ID ${roomId} does not exist.`);
+      return;
+  }
         const newMessage = await prisma.message.create({
             data: {
                 content,
@@ -109,18 +138,7 @@ export async function sendMessage(senderId: string, roomId: string, content: str
                 roomId,
             }
         });
-        const room = await prisma.room.findUnique({
-            where: {
-                id: roomId
-            },
-            select: {
-                users: true
-            }
-        });
-        if (!room) {
-            console.warn(`Room with ID ${roomId} does not exist.`);
-            return;
-        }
+       
         room.users.forEach((userId) => {
             const userToSend = onlineUsers.find(([id]) => id === userId);
             if (!userToSend) {
