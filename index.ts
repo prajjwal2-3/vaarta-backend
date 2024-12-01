@@ -19,8 +19,25 @@ const server = Bun.serve({
     open(ws: ServerWebSocket<unknown>) {
       console.log('connection open')
     },
-    close() {
-      console.log('connection closed')
+    close(ws: ServerWebSocket<unknown>) {
+      console.log('connection closed');
+      for (const [userId, userWs] of usersOnline.entries()) {
+        if (userWs === ws) {
+          usersOnline.delete(userId);
+          console.log(`User ${userId} removed from online users.`);
+          break;
+        }
+      }
+      const onlineUsers = Array.from(usersOnline.entries())
+      const message = JSON.stringify({
+        type: "onlineUsers",
+        users: onlineUsers.map(subArray => subArray[0])
+      })
+      onlineUsers.forEach(({ "1": ws }) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(message)
+        }
+      })
     },
     async message(ws: ServerWebSocket, message: string) {
       const parsedMessage = JSON.parse(message)

@@ -21,6 +21,7 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
+
 RUN bunx prisma generate
 
 # copy production dependencies and source code into final image

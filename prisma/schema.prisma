@@ -32,8 +32,8 @@ model Room {
   lastMessageId String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  name          String
-  roomImage     String?
+  names        String[]
+  roomImages     String[]
   messages      Message[]
 }
 
