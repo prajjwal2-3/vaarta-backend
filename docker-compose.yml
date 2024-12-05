@@ -1,15 +1,15 @@
+version: '3.9'
+
 services:
   chat-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: prajjwaljson200/chat-app:latest  # Use the image from Docker Hub
     develop:
       watch:
-      - action: sync
-        path: .
-        target: /usr/src/app
-        ignore:
-             - node_modules
+        - action: sync
+          path: .
+          target: /usr/src/app
+          ignore:
+            - node_modules
     ports:
       - "8000:8000"
     depends_on:
@@ -23,7 +23,7 @@ services:
       - chat-network
 
   postgres:
-    image: postgres:17
+    image: postgres:17  # Pull the official PostgreSQL image from Docker Hub
     environment:
       - POSTGRES_USER=prajjwal
       - POSTGRES_PASSWORD=chatapp
@@ -36,7 +36,7 @@ services:
       - chat-network
 
   redis:
-    image: redis:7
+    image: redis:7  # Pull the official Redis image from Docker Hub
     ports:
       - "6379:6379"
     volumes:
@@ -47,7 +47,6 @@ services:
 volumes:
   postgres-data:
   redis-data:
-
 
 networks:
   chat-network:
